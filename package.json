@@ -1,0 +1,9 @@
+{
+  "name": "vais-cursor",
+  "version": "0.1.0",
+  "description": "VAIS 9단계 워크플로우 - Cursor용 (vais-claude-code 한 방향 동기화)",
+  "private": true,
+  "scripts": {
+    "sync": "node bin/sync-from-claude.js"
+  }
+}
