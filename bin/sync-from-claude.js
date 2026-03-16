@@ -3,16 +3,18 @@
  * VAIS Cursor - 한 방향 동기화: vais-claude-code → vais-cursor
  * vais-cursor 루트에서 실행: node bin/sync-from-claude.js
  *
+ * submodule(vais-claude-code/)에서 git pull 후 파일을 복사합니다.
  * 환경 변수:
- *   VAIS_CLAUDE_REPO - Claude 레포 경로 (기본: ../vais-claude-code)
+ *   VAIS_CLAUDE_REPO - Claude 레포 경로 (기본: ./vais-claude-code submodule)
  */
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const CURSOR_ROOT = path.resolve(__dirname, '..');
 const CLAUDE_ROOT = process.env.VAIS_CLAUDE_REPO
   ? path.resolve(process.cwd(), process.env.VAIS_CLAUDE_REPO)
-  : path.resolve(CURSOR_ROOT, '..', 'vais-claude-code');
+  : path.resolve(CURSOR_ROOT, 'vais-claude-code');
 
 const SYNC_MAP = [
   { src: 'AGENTS.md', dest: 'AGENTS.md' },
@@ -41,11 +43,29 @@ function copyDir(src, dest) {
   }
 }
 
+function pullSubmodule() {
+  console.log('submodule 최신화: git pull (main)...');
+  try {
+    execSync('git -C vais-claude-code pull origin main', {
+      cwd: CURSOR_ROOT,
+      stdio: 'inherit',
+    });
+  } catch (e) {
+    console.error('submodule pull 실패:', e.message);
+    process.exit(1);
+  }
+}
+
 function main() {
   if (!fs.existsSync(CLAUDE_ROOT)) {
     console.error('Claude 레포를 찾을 수 없습니다:', CLAUDE_ROOT);
-    console.error('VAIS_CLAUDE_REPO 환경 변수로 경로를 지정하세요.');
+    console.error('git submodule update --init 을 먼저 실행하세요.');
     process.exit(1);
+  }
+
+  // submodule이면 pull, 외부 경로면 건너뜀
+  if (!process.env.VAIS_CLAUDE_REPO) {
+    pullSubmodule();
   }
 
   console.log('동기화: %s → %s', CLAUDE_ROOT, CURSOR_ROOT);

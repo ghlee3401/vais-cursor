@@ -1,0 +1,3 @@
+[submodule "vais-claude-code"]
+	path = vais-claude-code
+	url = https://github.com/ghlee3401/vais-claude-code.git
