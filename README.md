@@ -1,19 +1,20 @@
 # VAIS Cursor
 
-> 기획부터 배포까지, 팀 개발을 빠르고 튼튼하게. — Cursor 버전
+> 기획부터 배포까지, 팀 개발을 빠르고 튼튼하게. — Cursor Extension
 
-**v0.1.0** · 최종 수정 2026-03-15
+**v0.1.0** · 최종 수정 2026-03-16
 
-VAIS 9단계 개발 워크플로우의 **Cursor용** 버전입니다.
-메인 소스는 [vais-claude-code](https://github.com/ghlee3401/vais-claude-code)이며, 이 레포는 **한 방향 동기화**로 갱신됩니다.
+VAIS 9단계 개발 워크플로우의 **Cursor Extension** 버전입니다.
+메인 소스는 [vais-claude-code](https://github.com/ghlee3401/vais-claude-code)이며, git submodule + 동기화 스크립트로 갱신됩니다.
 
 ---
 
 ## 목차
 
-- [요구사항](#요구사항)
 - [설치](#설치)
+- [업데이트](#업데이트)
 - [빠른 시작](#빠른-시작)
+- [Extension 커맨드](#extension-커맨드)
 - [개발 워크플로우 (9단계)](#개발-워크플로우-9단계)
 - [실행 방식 (체이닝 문법)](#실행-방식-체이닝-문법)
 - [커맨드 레퍼런스](#커맨드-레퍼런스)
@@ -21,47 +22,85 @@ VAIS 9단계 개발 워크플로우의 **Cursor용** 버전입니다.
 - [Cursor 병렬 실행 (mcp_task)](#cursor-병렬-실행-mcp_task)
 - [Claude 버전과의 차이](#claude-버전과의-차이)
 - [설정 (vais.config.json)](#설정-vaisconfigjson)
-- [동기화 (vais-claude-code → vais-cursor)](#동기화-vais-claude-code--vais-cursor)
+- [Extension 개발](#extension-개발)
 - [프로젝트 구조](#프로젝트-구조)
 - [FAQ](#faq)
 - [라이선스](#라이선스)
 
 ---
 
-## 요구사항
+## 설치
 
-| 항목 | 최소 버전 |
-|------|----------|
-| Cursor | 최신 버전 권장 |
-| Node.js | v18+ |
+### 방법 1: .vsix 파일로 설치
+
+```bash
+# 1. 레포 클론
+git clone --recurse-submodules https://github.com/ghlee3401/vais-cursor.git
+cd vais-cursor
+
+# 2. 빌드
+npm install
+npm run package
+
+# 3. Cursor에 설치
+cursor --install-extension vais-cursor-0.1.0.vsix
+```
+
+### 방법 2: Cursor UI에서 설치
+
+1. `.vsix` 파일을 빌드 (위 1~2단계)
+2. Cursor에서 `Ctrl+Shift+P` → `Extensions: Install from VSIX...`
+3. `vais-cursor-0.1.0.vsix` 선택
+
+### 설치 후
+
+프로젝트를 열고 `Ctrl+Shift+P` → `VAIS: Install` 실행.
+`.cursor/rules/`, `.vais/`, `vais.config.json`이 자동으로 설치됩니다.
 
 ---
 
-## 설치
+## 업데이트
 
-### 1. 레포 클론
+vais-claude-code가 업데이트되면 아래 순서로 갱신합니다.
 
-```bash
-git clone https://github.com/ghlee3401/vais-cursor.git
-```
-
-### 2. Cursor 규칙 적용
-
-프로젝트의 `.cursor/rules/`에 이 레포의 `.cursor/rules/vais-workflow.mdc`를 복사합니다:
+### 1단계: Extension 업데이트 (개발자)
 
 ```bash
-cp vais-cursor/.cursor/rules/vais-workflow.mdc your-project/.cursor/rules/
+cd vais-cursor
+
+# submodule에서 최신 코드를 받아 assets/에 복사
+npm run sync
+
+# .vsix 재빌드
+npm run package
 ```
 
-또는 프로젝트 안에 `vais-cursor/` 폴더 자체를 두고, 규칙에서 참조하도록 합니다.
+`npm run sync`는 내부적으로:
+1. `vais-claude-code/` submodule에서 `git pull origin main`
+2. phases, templates, scripts, lib, AGENTS.md, vais.config.json → `assets/`에 복사
 
-### 3. (선택) 환경 변수
+### 2단계: Cursor에 재설치
 
 ```bash
-VAIS_CURSOR_ROOT=/path/to/vais-cursor
+cursor --install-extension vais-cursor-0.1.0.vsix
 ```
 
-규칙에서 스크립트·phases 경로를 찾을 때 사용합니다. 설정하지 않으면 워크스페이스 루트 기준 `vais-cursor/`를 탐색합니다.
+또는 `Ctrl+Shift+P` → `Extensions: Install from VSIX...`
+
+### 3단계: 프로젝트 갱신
+
+각 프로젝트에서 `Ctrl+Shift+P` → **`VAIS: Sync`** 실행.
+Extension에 포함된 최신 규칙·에셋이 프로젝트의 `.vais/`와 `.cursor/rules/`에 반영됩니다.
+
+### 요약
+
+```
+vais-claude-code 업데이트
+  → npm run sync          (submodule pull + assets 복사)
+  → npm run package       (.vsix 재빌드)
+  → Cursor에 .vsix 재설치
+  → 각 프로젝트에서 VAIS: Sync
+```
 
 ---
 
@@ -79,14 +118,25 @@ vais status                               # 진행 상태 확인
 
 피처명 없이 실행하면 기존 피처 목록에서 선택하거나 새 피처명을 입력할 수 있습니다.
 
-자세한 실행 방식은 [실행 방식 (체이닝 문법)](#실행-방식-체이닝-문법) 참고.
+---
+
+## Extension 커맨드
+
+`Ctrl+Shift+P`로 Command Palette를 열고 실행합니다.
+
+| 커맨드 | 설명 |
+|--------|------|
+| `VAIS: Install` | 프로젝트에 VAIS 설치 (`.cursor/rules/` + `.vais/` + `vais.config.json`) |
+| `VAIS: Sync` | 규칙·에셋 최신화 (extension 업데이트 후 실행) |
+| `VAIS: Status` | 워크플로우 진행 상태 보기 |
+| `VAIS: Uninstall` | 프로젝트에서 VAIS 제거 (`docs/` 산출물은 유지) |
 
 ---
 
 ## 개발 워크플로우 (9단계)
 
 ```
-🔭조사·탐색 → 📋기획 → 🗺IA → 🖼와이어프레임 → 🎨설계(UI+DB) → 💻프론트 → ⚙️백엔드 → 🔎Gap분석 → 🔍검토
+조사·탐색 → 기획 → IA → 와이어프레임 → 설계(UI+DB) → 프론트 → 백엔드 → Gap분석 → 검토
 ```
 
 ### 산출물 경로
@@ -220,14 +270,6 @@ check 단계는 4단계로 구성됩니다:
 3. **보안 스캔** — OWASP Top 10 체크
 4. **QA 시나리오 생성** — 기획서 기반 테스트 시나리오 (review에서 판정)
 
-Gap 발견 시 구체적인 수정 지시를 출력합니다:
-
-```markdown
-| # | 미구현 항목 | 출처 | 수정 대상 파일 | 수정 범위 | 수정 내용 |
-|---|-----------|------|-------------|---------|---------|
-| 1 | 비밀번호 재설정 | plan 3.1.4 | src/api/auth.ts | 45-60 | resetPassword 엔드포인트 추가 |
-```
-
 ### 문서 참조 투명성
 
 에이전트가 구현 시 참조한 문서 목록을 산출물 상단에 기록합니다:
@@ -268,9 +310,6 @@ Cursor에는 Agent Team이 없으므로, 병렬 구간은 **mcp_task**로 subage
 | `design` | `subagent_type: "designer"` | `subagent_type: "backend-dev"` |
 | `fe+be` | `subagent_type: "frontend-dev"` | `subagent_type: "backend-dev"` |
 
-- 동일 phase에 대해 **mcp_task를 두 번 동시에 호출**합니다.
-- 각 호출의 `prompt`에 해당 phase 지침(`phases/<액션>.md`)과 피처명·참조 문서 경로를 명시합니다.
-
 ### auto 실행 흐름
 
 ```
@@ -281,22 +320,13 @@ Cursor에는 Agent Team이 없으므로, 병렬 구간은 **mcp_task**로 subage
   → mcp_task(reviewer): check → review
 ```
 
-### 언제 mcp_task를 사용하나요?
-
-| 실행 방식 | mcp_task 사용 | 설명 |
-|----------|--------------|------|
-| 단일 (`vais plan`) | 사용 안 함 | 메인 에이전트가 직접 처리 |
-| 순차 체이닝 (`plan:ia`) | 사용 안 함 | 순차라 subagent 불필요 |
-| 병렬 체이닝 (`fe+be`) | **사용함** | 병렬 실행에 subagent 필요 |
-| 자동 (`vais auto`) | **사용함** | 병렬 구간에서 subagent 호출 |
-
 ---
 
 ## Claude 버전과의 차이
 
 | 항목 | Claude (vais-claude-code) | Cursor (vais-cursor) |
 |------|--------------------------|---------------------|
-| 설치 | `/plugin install` | 레포 클론 + `.cursor/rules` 복사 |
+| 설치 | `/plugin install` | **Cursor Extension (.vsix)** |
 | 병렬 실행 | Agent 도구 / Agent Teams | **mcp_task** (subagent 호출) |
 | 훅 시스템 | 6개 자동 훅 (SessionStart, Stop 등) | 없음 (규칙으로 대체, 스크립트 수동 실행) |
 | Agent Teams | 지원 (실험적) | 미지원 |
@@ -323,34 +353,44 @@ Cursor에는 Agent Team이 없으므로, 병렬 구간은 **mcp_task**로 subage
 
 ---
 
-## 동기화 (vais-claude-code → vais-cursor)
+## Extension 개발
 
-Claude 레포가 업데이트되면, 이 레포에서 아래 한 번 실행합니다:
+이 레포 자체를 수정하거나 빌드하는 개발자를 위한 안내입니다.
+
+### 사전 요구
+
+| 항목 | 최소 버전 |
+|------|----------|
+| Node.js | v18+ |
+| Cursor | 최신 버전 권장 |
+
+### 셋업
 
 ```bash
-npm run sync
-# 또는
-node bin/sync-from-claude.js
+git clone --recurse-submodules https://github.com/ghlee3401/vais-cursor.git
+cd vais-cursor
+npm install
 ```
 
-다른 경로에 있는 Claude 레포를 쓰려면:
+### 빌드 & 패키징
 
 ```bash
-VAIS_CLAUDE_REPO=/path/to/vais-claude-code node bin/sync-from-claude.js
+npm run compile     # TypeScript 컴파일
+npm run package     # .vsix 빌드
 ```
 
-### 동기화 대상
+### 개발 모드 (F5 디버깅)
 
-| 소스 (vais-claude-code) | 대상 (vais-cursor) |
-|-------------------------|---------------------|
-| `AGENTS.md` | `AGENTS.md` |
-| `vais.config.json` | `vais.config.json` |
-| `skills/vais/phases/` | `phases/` |
-| `templates/` | `templates/` |
-| `scripts/` | `scripts/` |
-| `lib/` | `lib/` |
+Cursor/VS Code에서 이 레포를 열고 `F5` → Extension Development Host가 실행됩니다.
 
-**Cursor 전용** (동기화 제외): `bin/`, `.cursor/`, `README.md`, `SYNC.md`, `package.json`.
+### vais-claude-code 동기화
+
+```bash
+npm run sync        # submodule pull + assets/ 복사
+npm run package     # .vsix 재빌드
+```
+
+자세한 동기화 절차는 [SYNC.md](./SYNC.md) 참고.
 
 ---
 
@@ -358,39 +398,29 @@ VAIS_CLAUDE_REPO=/path/to/vais-claude-code node bin/sync-from-claude.js
 
 ```
 vais-cursor/
-├── .cursor/
-│   └── rules/
-│       └── vais-workflow.mdc  # Cursor용 VAIS 규칙
+├── src/
+│   └── extension.ts            # Extension 진입점 (install/sync/status/uninstall)
+├── assets/                      # 사용자 프로젝트에 설치되는 파일들
+│   ├── cursor-rules/
+│   │   └── vais-workflow.mdc   # Cursor용 VAIS 규칙
+│   ├── phases/                  # phase별 지침 (동기화됨)
+│   ├── templates/               # 문서 템플릿 (동기화됨)
+│   ├── scripts/                 # 유틸리티 스크립트 (동기화됨)
+│   ├── lib/                     # 유틸리티 (동기화됨)
+│   ├── AGENTS.md                # 에이전트 지침 (동기화됨)
+│   └── vais.config.json         # 중앙 설정 (동기화됨)
 ├── bin/
-│   └── sync-from-claude.js    # 동기화 스크립트
-├── phases/                     # phase별 지침 (동기화됨)
-│   ├── plan.md
-│   ├── ia.md
-│   ├── wireframe.md
-│   ├── design.md
-│   ├── fe.md
-│   ├── be.md
-│   ├── check.md
-│   ├── review.md
-│   ├── auto.md
-│   ├── init.md
-│   ├── fix.md
-│   └── ...
-├── templates/                  # 문서 템플릿 (동기화됨)
-├── scripts/                    # 유틸리티 스크립트 (동기화됨)
-│   ├── bash-guard.js
-│   ├── doc-tracker.js
-│   ├── get-context.js
-│   └── ...
-├── lib/                        # 유틸리티 (동기화됨)
-│   ├── paths.js
-│   ├── status.js
-│   ├── io.js
-│   └── debug.js
-├── AGENTS.md                   # 에이전트 지침 (동기화됨)
-├── vais.config.json            # 중앙 설정 (동기화됨)
-├── SYNC.md                     # 동기화 체크리스트
-├── package.json
+│   └── sync-from-claude.js      # 동기화 스크립트
+├── vais-claude-code/            # git submodule (소스)
+├── .cursor/rules/               # 이 레포 개발용 규칙
+├── out/                         # 컴파일 출력 (gitignore)
+├── package.json                 # Extension manifest + scripts
+├── tsconfig.json
+├── .vscodeignore                # .vsix 패키징 제외 목록
+├── AGENTS.md
+├── vais.config.json
+├── SYNC.md
+├── LICENSE
 └── README.md
 ```
 
@@ -404,7 +434,7 @@ vais-cursor/
 
 ### Q: Claude 버전이 업데이트되면?
 
-`npm run sync`를 실행하면 phases, templates, scripts, lib 등 공통 콘텐츠가 자동으로 갱신됩니다.
+`npm run sync && npm run package` → Cursor에 .vsix 재설치 → 각 프로젝트에서 `VAIS: Sync`.
 
 ### Q: 훅이 없으면 불편하지 않나요?
 
@@ -416,11 +446,11 @@ vais-cursor/
 
 ### Q: 기존 프로젝트에도 적용할 수 있나요?
 
-네. `vais init {피처명}`으로 기존 코드를 분석해 VAIS 문서를 역생성합니다.
+네. `VAIS: Install` 후 `vais init {피처명}`으로 기존 코드를 분석해 VAIS 문서를 역생성합니다.
 
 ### Q: 외부 의존성이 있나요?
 
-없습니다. Node.js 내장 모듈만 사용합니다.
+런타임 의존성은 없습니다. Extension은 VS Code API만 사용합니다.
 
 ---
 

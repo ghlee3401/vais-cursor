@@ -1,9 +1,51 @@
 {
   "name": "vais-cursor",
+  "displayName": "VAIS Cursor Workflow",
+  "description": "기획부터 배포까지, 팀 개발을 빠르고 튼튼하게 — VAIS 9단계 워크플로우",
   "version": "0.1.0",
-  "description": "VAIS 9단계 워크플로우 - Cursor용 (vais-claude-code 한 방향 동기화)",
-  "private": true,
+  "publisher": "ghlee3401",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ghlee3401/vais-cursor"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["vais", "workflow", "cursor", "ai", "team"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vais.install",
+        "title": "VAIS: Install (프로젝트에 VAIS 설치)"
+      },
+      {
+        "command": "vais.sync",
+        "title": "VAIS: Sync (규칙·에셋 최신화)"
+      },
+      {
+        "command": "vais.status",
+        "title": "VAIS: Status (워크플로우 상태)"
+      },
+      {
+        "command": "vais.uninstall",
+        "title": "VAIS: Uninstall (프로젝트에서 VAIS 제거)"
+      }
+    ]
+  },
   "scripts": {
-    "sync": "node bin/sync-from-claude.js"
+    "sync": "node bin/sync-from-claude.js",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^3.0.0"
   }
 }

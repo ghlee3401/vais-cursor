@@ -1,0 +1,41 @@
+---
+description: VAIS 9단계 개발 워크플로우 (Cursor용). 기획→설계→구현→검토, 체이닝(순차/병렬), mcp_task 병렬 호출.
+globs: 
+alwaysApply: false
+---
+
+# VAIS Code — Cursor용 워크플로우
+
+vais-claude-code의 서브 버전. **한 방향 동기화**: vais-claude-code → vais-cursor. 동일한 9단계·문서 구조·규칙을 사용하며, 병렬 구간만 Cursor의 `mcp_task`(subagent)로 처리합니다.
+
+## 공통 지침
+
+- 프로젝트 내 VAIS 콘텐츠 경로: `VAIS_CURSOR_ROOT` 환경 변수 또는 워크스페이스 루트 기준 **`vais-cursor/`** (또는 `.vais-cursor/`).
+- 해당 폴더의 **AGENTS.md**를 반드시 참조하고, phase별 지침은 **phases/<액션>.md**를 읽어 실행하세요.
+- 문서는 `docs/01-research` ~ `docs/07-review` 구조, 피처명은 kebab-case 영문.
+
+## 체이닝
+
+- **순차** (`:`): `plan:ia:wireframe` → phases/plan.md → phases/ia.md → phases/wireframe.md 순서 실행.
+- **병렬** (`+`): **mcp_task**로 해당 역할 subagent를 동시에 호출.
+
+## 병렬 시 mcp_task 매핑
+
+| 체이닝 | subagent_type A | subagent_type B |
+|--------|-----------------|-----------------|
+| `design` | designer | backend-dev |
+| `fe+be` | frontend-dev | backend-dev |
+
+- 병렬 실행 시: 동일 phase에 대해 `mcp_task`를 두 번 호출 (각각 designer + backend-dev 또는 frontend-dev + backend-dev). `prompt`에 해당 phase 지침과 피처명·참조 문서 경로를 명시하세요.
+- **auto** 흐름: tech-lead 역할로 순차 진행하다가 design / fe+be 구간에서만 위처럼 `mcp_task`로 designer+backend-dev, frontend-dev+backend-dev 병렬 호출.
+
+## 상태·컨텍스트
+
+- 가능하면 작업 전에 **`node ${VAIS_CURSOR_ROOT}/scripts/get-context.js [피처명]`** 실행해 현재 진행 상태를 확인하세요 (VAIS_CURSOR_ROOT이 없으면 `vais-cursor/` 사용).
+- Bash 실행 전 위험 명령 차단이 필요하면 **`node ${VAIS_CURSOR_ROOT}/scripts/bash-guard.js`** 검사 규칙을 따르세요.
+- 문서(Write/Edit) 수정 후 워크플로우 상태 갱신이 필요하면 **`node ${VAIS_CURSOR_ROOT}/scripts/doc-tracker.js`** 실행을 고려하세요.
+
+## 액션 요약
+
+- `init`, `auto`, `research` ~ `review`, `fix`, `status`, `next`, `help` 등: **phases/<액션>.md** 지침대로 실행.
+- `auto [feature]`: tech-lead처럼 순차 진행하고, design / fe+be 구간에서만 위 표대로 mcp_task 병렬 호출.

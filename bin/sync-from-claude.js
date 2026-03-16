@@ -17,12 +17,12 @@ const CLAUDE_ROOT = process.env.VAIS_CLAUDE_REPO
   : path.resolve(CURSOR_ROOT, 'vais-claude-code');
 
 const SYNC_MAP = [
-  { src: 'AGENTS.md', dest: 'AGENTS.md' },
-  { src: 'vais.config.json', dest: 'vais.config.json' },
-  { src: 'skills/vais/phases', dest: 'phases', dir: true },
-  { src: 'templates', dest: 'templates', dir: true },
-  { src: 'scripts', dest: 'scripts', dir: true },
-  { src: 'lib', dest: 'lib', dir: true },
+  { src: 'AGENTS.md', dest: 'assets/AGENTS.md' },
+  { src: 'vais.config.json', dest: 'assets/vais.config.json' },
+  { src: 'skills/vais/phases', dest: 'assets/phases', dir: true },
+  { src: 'templates', dest: 'assets/templates', dir: true },
+  { src: 'scripts', dest: 'assets/scripts', dir: true },
+  { src: 'lib', dest: 'assets/lib', dir: true },
 ];
 
 function copyFile(src, dest) {
