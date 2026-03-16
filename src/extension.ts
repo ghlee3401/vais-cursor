@@ -202,12 +202,17 @@ async function uninstallCommand(): Promise<void> {
 
   await deleteDir(vscode.Uri.joinPath(wsUri, '.vais'));
 
+  // .cursor/rules/vais-*.mdc 모두 삭제
   try {
-    await vscode.workspace.fs.delete(
-      vscode.Uri.joinPath(wsUri, '.cursor', 'rules', 'vais-workflow.mdc')
-    );
+    const rulesDir = vscode.Uri.joinPath(wsUri, '.cursor', 'rules');
+    const entries = await vscode.workspace.fs.readDirectory(rulesDir);
+    for (const [name] of entries) {
+      if (name.startsWith('vais-') && name.endsWith('.mdc')) {
+        await vscode.workspace.fs.delete(vscode.Uri.joinPath(rulesDir, name));
+      }
+    }
   } catch {
-    // ignore
+    // ignore if .cursor/rules doesn't exist
   }
 
   // vais.config.json 제거
