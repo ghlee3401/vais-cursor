@@ -66,7 +66,7 @@ if (chainingMatch) {
     const segments = chainExpr.split(':');
     const allValid = segments.every(seg => {
       const parts = seg.split('+');
-      return parts.every(p => phases.includes(p) || Object.values(nameToKey).includes(p));
+      return parts.every(p => phases.includes(p) || nameToKey[p]);
     });
 
     if (allValid) {
@@ -108,18 +108,17 @@ if (rangeMatch) {
       const implGroup = parallelGroups.implementation || [];
       const chainParts = [];
       let i = 0;
+      const addedParallelGroups = new Set();
       while (i < rangePhases.length) {
         const p = rangePhases[i];
-        if (implGroup.includes(p)) {
+        if (implGroup.includes(p) && !addedParallelGroups.has('impl')) {
           const siblings = rangePhases.filter(rp => implGroup.includes(rp));
           if (siblings.length > 1) {
             chainParts.push(siblings.join('+'));
-            // skip all siblings — findIndex returns -1 when no non-impl phase remains
-            const nextNonImpl = rangePhases.slice(i).findIndex(rp => !implGroup.includes(rp));
-            if (nextNonImpl === -1) {
-              i = rangePhases.length;
-            } else {
-              i += nextNonImpl;
+            addedParallelGroups.add('impl');
+            // 병렬 그룹의 모든 항목을 건너뛰기
+            while (i < rangePhases.length && implGroup.includes(rangePhases[i])) {
+              i++;
             }
             continue;
           }

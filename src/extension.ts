@@ -55,6 +55,35 @@ async function deleteDir(uri: vscode.Uri): Promise<void> {
   }
 }
 
+/**
+ * 에셋 복사 공통 로직
+ */
+async function copyAllAssets(
+  context: vscode.ExtensionContext,
+  wsUri: vscode.Uri,
+  progress: vscode.Progress<{ message?: string }>,
+  actionLabel: string,
+): Promise<number> {
+  let totalFiles = 0;
+
+  for (const { src, dest } of ASSET_MAP) {
+    progress.report({ message: `${src} ${actionLabel} 중...` });
+    const srcUri = assetUri(context, src);
+    const destUri = vscode.Uri.joinPath(wsUri, dest);
+    totalFiles += await copyDir(srcUri, destUri);
+  }
+
+  for (const { src, dest } of ASSET_FILES) {
+    progress.report({ message: `${src} ${actionLabel} 중...` });
+    const srcUri = assetUri(context, src);
+    const destUri = vscode.Uri.joinPath(wsUri, dest);
+    await vscode.workspace.fs.copy(srcUri, destUri, { overwrite: true });
+    totalFiles++;
+  }
+
+  return totalFiles;
+}
+
 // ─── VAIS: Install ───────────────────────────────────────────────
 async function installCommand(context: vscode.ExtensionContext): Promise<void> {
   const wsUri = getWorkspaceUri();
@@ -74,25 +103,7 @@ async function installCommand(context: vscode.ExtensionContext): Promise<void> {
   await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'VAIS 설치 중...' },
     async (progress) => {
-      let totalFiles = 0;
-
-      // 디렉토리 복사
-      for (const { src, dest } of ASSET_MAP) {
-        progress.report({ message: `${src} 복사 중...` });
-        const srcUri = assetUri(context, src);
-        const destUri = vscode.Uri.joinPath(wsUri, dest);
-        totalFiles += await copyDir(srcUri, destUri);
-      }
-
-      // 단일 파일 복사
-      for (const { src, dest } of ASSET_FILES) {
-        progress.report({ message: `${src} 복사 중...` });
-        const srcUri = assetUri(context, src);
-        const destUri = vscode.Uri.joinPath(wsUri, dest);
-        await vscode.workspace.fs.copy(srcUri, destUri, { overwrite: true });
-        totalFiles++;
-      }
-
+      const totalFiles = await copyAllAssets(context, wsUri, progress, '복사');
       vscode.window.showInformationMessage(
         `VAIS 설치 완료! (${totalFiles}개 파일)  Cursor 채팅에서 "vais auto 피처명"으로 시작하세요.`
       );
@@ -117,23 +128,7 @@ async function syncCommand(context: vscode.ExtensionContext): Promise<void> {
   await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'VAIS 동기화 중...' },
     async (progress) => {
-      let totalFiles = 0;
-
-      for (const { src, dest } of ASSET_MAP) {
-        progress.report({ message: `${src} 동기화 중...` });
-        const srcUri = assetUri(context, src);
-        const destUri = vscode.Uri.joinPath(wsUri, dest);
-        totalFiles += await copyDir(srcUri, destUri);
-      }
-
-      for (const { src, dest } of ASSET_FILES) {
-        progress.report({ message: `${src} 동기화 중...` });
-        const srcUri = assetUri(context, src);
-        const destUri = vscode.Uri.joinPath(wsUri, dest);
-        await vscode.workspace.fs.copy(srcUri, destUri, { overwrite: true });
-        totalFiles++;
-      }
-
+      const totalFiles = await copyAllAssets(context, wsUri, progress, '동기화');
       vscode.window.showInformationMessage(`VAIS 동기화 완료! (${totalFiles}개 파일)`);
     }
   );
@@ -154,7 +149,13 @@ async function statusCommand(): Promise<void> {
   }
 
   const raw = await vscode.workspace.fs.readFile(statusUri);
-  const status = JSON.parse(Buffer.from(raw).toString('utf8'));
+  let status: any;
+  try {
+    status = JSON.parse(Buffer.from(raw).toString('utf8'));
+  } catch {
+    vscode.window.showErrorMessage('VAIS: status.json 파일이 손상되었습니다. 파일을 확인해주세요.');
+    return;
+  }
 
   const phases = ['research', 'plan', 'ia', 'wireframe', 'design', 'fe', 'be', 'check', 'review'];
   const phaseNames: Record<string, string> = {

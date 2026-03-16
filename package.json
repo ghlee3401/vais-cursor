@@ -15,6 +15,12 @@
   "categories": ["Other"],
   "keywords": ["vais", "workflow", "cursor", "ai", "team"],
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:vais.install",
+    "onCommand:vais.sync",
+    "onCommand:vais.status",
+    "onCommand:vais.uninstall"
+  ],
   "contributes": {
     "commands": [
       {

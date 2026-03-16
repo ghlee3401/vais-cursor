@@ -64,14 +64,18 @@ function findDoc(phase, feature) {
 }
 
 /**
- * 설정 파일 로드 (프로세스 내 캐싱)
+ * 설정 파일 로드 (프로세스 내 캐싱 — mtime 기반 무효화)
  */
 let _configCache = null;
+let _configMtime = 0;
 function loadConfig() {
-  if (_configCache) return _configCache;
   try {
     const configPath = CONFIG.vaisConfig();
+    const stat = fs.statSync(configPath);
+    const mtime = stat.mtimeMs;
+    if (_configCache && mtime === _configMtime) return _configCache;
     _configCache = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    _configMtime = mtime;
     return _configCache;
   } catch (e) {
     return { version: '0.1.0', workflow: { phases: [] } };
