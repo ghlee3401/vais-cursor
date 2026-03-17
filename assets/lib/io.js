@@ -11,7 +11,10 @@ const MAX_CONTEXT_LENGTH = 8000;
  */
 function readStdin() {
   try {
-    const raw = fs.readFileSync(process.stdin.fd, 'utf8').trim();
+    const fd = process.stdin.fd;
+    // fd가 유효한지 확인 (Windows 호환)
+    if (fd === undefined || fd === null) return {};
+    const raw = fs.readFileSync(fd, 'utf8').trim();
     if (!raw) return {};
     return JSON.parse(raw);
   } catch (e) {
@@ -67,8 +70,10 @@ function outputEmpty() {
  */
 function truncate(text, maxLen) {
   if (!text) return '';
-  if (text.length <= (maxLen || MAX_CONTEXT_LENGTH)) return text;
-  return text.substring(0, maxLen || MAX_CONTEXT_LENGTH) + '\n... (truncated)';
+  const limit = maxLen || MAX_CONTEXT_LENGTH;
+  if (text.length <= limit) return text;
+  const suffix = '\n... (truncated)';
+  return text.substring(0, limit - suffix.length) + suffix;
 }
 
 module.exports = {

@@ -15,15 +15,18 @@ if (!command) {
 }
 
 const BLOCKED = [
-  { pattern: /rm\s+-r\s*f\s+\/(?!\S)/, reason: '루트 디렉토리 삭제 시도' },
-  { pattern: /rm\s+-r\s*f\s+~/, reason: '홈 디렉토리 삭제 시도' },
-  { pattern: /rm\s+-r\s*f\s+\.(?:\/?\s|$)/, reason: '현재 디렉토리 전체 삭제 시도' },
+  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)\/(\s|$)/, reason: '루트 디렉토리 삭제 시도' },
+  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)~/, reason: '홈 디렉토리 삭제 시도' },
+  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)\.(\s|\/?\s|$)/, reason: '현재 디렉토리 전체 삭제 시도' },
+  { pattern: /rm\s+-rf\s/i, reason: '재귀 강제 삭제 시도' },
   { pattern: /drop\s+database/i, reason: 'DB 전체 삭제 시도' },
   { pattern: /drop\s+table/i, reason: 'DB 테이블 삭제 시도' },
-  { pattern: /truncate/i, reason: 'DB 테이블 초기화 시도' },
+  { pattern: /truncate\s+table/i, reason: 'DB 테이블 초기화 시도' },
   { pattern: /git\s+push\s+.*--force/, reason: '강제 푸시는 팀 작업에 위험합니다' },
-  { pattern: /mkfs/, reason: '파일시스템 포맷 시도' },
-  { pattern: /:\(\)\{.*\|.*&\}/, reason: 'Fork bomb 감지' },
+  { pattern: /git\s+push\s+.*-f(\s|$)/, reason: '강제 푸시는 팀 작업에 위험합니다' },
+  { pattern: /mkfs\b/, reason: '파일시스템 포맷 시도' },
+  { pattern: /:\(\)\{.*\|.*&\s*\}/, reason: 'Fork bomb 감지' },
+  { pattern: /dd\s+.*of=\/dev\//, reason: '디스크 직접 쓰기 시도' },
 ];
 
 const ASK = [
@@ -33,15 +36,17 @@ const ASK = [
 ];
 
 for (const { pattern, reason } of BLOCKED) {
-  if (pattern.test(command)) {
-    debugLog('BashGuard', 'BLOCKED', { command, reason });
-    outputBlock(`⛔ 차단됨: ${reason}\n명령: ${command}`);
+  if (typeof command === 'string' && pattern.test(command)) {
+    debugLog('BashGuard', 'BLOCKED', { reason });
+    // 로그에 명령어 전체를 노출하지 않고 축약
+    const displayCmd = command.length > 80 ? command.substring(0, 80) + '...' : command;
+    outputBlock(`⛔ 차단됨: ${reason}\n명령: ${displayCmd}`);
     process.exit(0);
   }
 }
 
 for (const { pattern, reason } of ASK) {
-  if (pattern.test(command)) {
+  if (typeof command === 'string' && pattern.test(command)) {
     debugLog('BashGuard', 'WARNING', { command, reason });
     outputAllow(`⚠️ 주의: ${reason}\n실행하려는 명령: \`${command}\`\n사용자에게 확인을 받으세요.`);
     process.exit(0);

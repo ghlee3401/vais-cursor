@@ -2,7 +2,7 @@
 
 > 기획부터 배포까지, 팀 개발을 빠르고 튼튼하게. — Cursor Extension
 
-**v0.1.0** · 최종 수정 2026-03-16
+**v0.3.0** · 최종 수정 2026-03-16
 
 VAIS 9단계 개발 워크플로우의 **Cursor Extension** 버전입니다.
 메인 소스는 [vais-claude-code](https://github.com/ghlee3401/vais-claude-code)이며, git submodule + 동기화 스크립트로 갱신됩니다.
@@ -12,8 +12,8 @@ VAIS 9단계 개발 워크플로우의 **Cursor Extension** 버전입니다.
 ## 목차
 
 - [설치](#설치)
+- [사용법](#사용법)
 - [업데이트](#업데이트)
-- [빠른 시작](#빠른-시작)
 - [Extension 커맨드](#extension-커맨드)
 - [개발 워크플로우 (9단계)](#개발-워크플로우-9단계)
 - [실행 방식 (체이닝 문법)](#실행-방식-체이닝-문법)
@@ -43,19 +43,115 @@ npm install
 npm run package
 
 # 3. Cursor에 설치
-cursor --install-extension vais-cursor-0.1.0.vsix
+cursor --install-extension vais-cursor-0.3.0.vsix
 ```
 
 ### 방법 2: Cursor UI에서 설치
 
 1. `.vsix` 파일을 빌드 (위 1~2단계)
 2. Cursor에서 `Ctrl+Shift+P` → `Extensions: Install from VSIX...`
-3. `vais-cursor-0.1.0.vsix` 선택
+3. `vais-cursor-0.3.0.vsix` 선택
 
 ### 설치 후
 
-프로젝트를 열고 `Ctrl+Shift+P` → `VAIS: Install` 실행.
+프로젝트를 열고 `Ctrl+Shift+P` → **`VAIS: Install`** 실행.
 `.cursor/rules/`, `.vais/`, `vais.config.json`이 자동으로 설치됩니다.
+
+---
+
+## 사용법
+
+### 1단계: 프로젝트에 VAIS 설치
+
+```
+Ctrl+Shift+P → VAIS: Install
+```
+
+프로젝트 루트에 워크플로우 규칙, 스크립트, 설정 파일이 설치됩니다.
+
+### 2단계: Cursor 채팅에서 시작
+
+Cursor 채팅창에 아래 중 하나를 입력합니다:
+
+```
+vais auto 로그인기능          ← 전체 9단계 자동 실행 (권장)
+vais plan 로그인기능          ← 기획부터 하나씩
+vais help                    ← 대화형 튜토리얼
+```
+
+#### 처음 시작할 때
+
+```
+vais help
+```
+
+대화형으로 상황에 맞는 커맨드를 안내받을 수 있습니다.
+
+#### 새 기능 개발
+
+```
+vais auto 결제기능
+```
+
+9단계(조사→기획→IA→와이어프레임→설계→프론트→백엔드→Gap분석→검토)를 자동으로 진행합니다.
+`plan`, `fe` 완료 시 사용자 확인을 요청하는 게이트가 있어 중간에 방향을 수정할 수 있습니다.
+
+#### 특정 단계만 실행
+
+```
+vais plan 결제기능              ← 기획만
+vais fe 결제기능                ← 프론트엔드만
+vais check 결제기능             ← Gap 분석만
+```
+
+#### 여러 단계를 연속 실행 (체이닝)
+
+```
+vais plan:ia:wireframe 결제기능   ← 순차 실행 (:)
+vais fe+be 결제기능               ← 병렬 실행 (+)
+vais plan:ia:design:fe+be:check 결제기능  ← 혼합
+```
+
+#### 기존 프로젝트에 적용
+
+```
+vais init 결제기능
+```
+
+기존 코드를 분석해 VAIS 워크플로우 문서를 역생성합니다. 코드는 수정하지 않습니다.
+
+#### 버그 수정 / 변경 요청
+
+```
+vais fix 결제기능
+```
+
+영향 범위를 분석한 뒤 코드·문서를 일괄 수정하고 검증합니다.
+
+### 3단계: 진행 상태 확인
+
+```
+vais status     ← 전체 피처 진행 상태
+vais next       ← 다음 단계 안내
+```
+
+또는 `Ctrl+Shift+P` → **`VAIS: Status`** 로 확인할 수 있습니다.
+
+### 4단계: 테스트 & 커밋
+
+```
+vais test       ← 테스트 프레임워크 자동 감지 후 실행
+vais commit     ← Conventional Commits 형식 자동 커밋
+```
+
+### 요약
+
+```
+VAIS: Install   →  프로젝트에 VAIS 설치 (최초 1회)
+vais auto 기능   →  전체 자동 워크플로우
+vais status     →  진행 상태 확인
+VAIS: Sync      →  Extension 업데이트 후 규칙 최신화
+```
 
 ---
 
@@ -63,31 +159,35 @@ cursor --install-extension vais-cursor-0.1.0.vsix
 
 vais-claude-code가 업데이트되면 아래 순서로 갱신합니다.
 
-### 1단계: Extension 업데이트 (개발자)
+### 1단계: Extension 에셋 동기화
 
 ```bash
 cd vais-cursor
 
 # submodule에서 최신 코드를 받아 assets/에 복사
 npm run sync
-
-# .vsix 재빌드
-npm run package
 ```
 
 `npm run sync`는 내부적으로:
 1. `vais-claude-code/` submodule에서 `git pull origin main`
 2. phases, templates, scripts, lib, AGENTS.md, vais.config.json → `assets/`에 복사
 
-### 2단계: Cursor에 재설치
+### 2단계: 버전업 & .vsix 재빌드
 
 ```bash
-cursor --install-extension vais-cursor-0.1.0.vsix
+# package.json version을 올린 뒤
+npm run package
+```
+
+### 3단계: Cursor에 재설치
+
+```bash
+cursor --install-extension vais-cursor-x.y.z.vsix
 ```
 
 또는 `Ctrl+Shift+P` → `Extensions: Install from VSIX...`
 
-### 3단계: 프로젝트 갱신
+### 4단계: 프로젝트 갱신
 
 각 프로젝트에서 `Ctrl+Shift+P` → **`VAIS: Sync`** 실행.
 Extension에 포함된 최신 규칙·에셋이 프로젝트의 `.vais/`와 `.cursor/rules/`에 반영됩니다.
@@ -102,21 +202,15 @@ vais-claude-code 업데이트
   → 각 프로젝트에서 VAIS: Sync
 ```
 
----
+### 외부 경로 사용 (선택)
 
-## 빠른 시작
+submodule 대신 별도 경로의 Claude 레포를 쓰려면:
 
-Cursor 채팅에서 아래처럼 요청합니다:
-
-```
-vais auto SNS앱                          # 전체 자동 (순차 진행 + 병렬 구간 mcp_task)
-vais plan:ia:wireframe 로그인기능         # 순차 체이닝
-vais fe+be 로그인기능                     # 병렬 체이닝 (mcp_task)
-vais plan 로그인기능                      # 단일 실행
-vais status                               # 진행 상태 확인
+```bash
+VAIS_CLAUDE_REPO=/path/to/vais-claude-code npm run sync
 ```
 
-피처명 없이 실행하면 기존 피처 목록에서 선택하거나 새 피처명을 입력할 수 있습니다.
+자세한 동기화 절차는 [SYNC.md](./SYNC.md) 참고.
 
 ---
 
@@ -402,7 +496,7 @@ vais-cursor/
 │   └── extension.ts            # Extension 진입점 (install/sync/status/uninstall)
 ├── assets/                      # 사용자 프로젝트에 설치되는 파일들
 │   ├── cursor-rules/
-│   │   └── vais-workflow.mdc   # Cursor용 VAIS 규칙
+│   │   └── vais-*.mdc          # Cursor용 VAIS 규칙 (phase별)
 │   ├── phases/                  # phase별 지침 (동기화됨)
 │   ├── templates/               # 문서 템플릿 (동기화됨)
 │   ├── scripts/                 # 유틸리티 스크립트 (동기화됨)
@@ -438,7 +532,7 @@ vais-cursor/
 
 ### Q: 훅이 없으면 불편하지 않나요?
 
-`.cursor/rules/vais-workflow.mdc`에 핵심 규칙이 들어 있어, 에이전트가 규칙을 따라 동작합니다. 위험 명령 차단(`bash-guard.js`)이나 상태 확인(`get-context.js`)은 필요할 때 터미널에서 직접 실행할 수 있습니다.
+`.cursor/rules/vais-*.mdc`에 핵심 규칙이 들어 있어, 에이전트가 규칙을 따라 동작합니다. 위험 명령 차단(`bash-guard.js`)이나 상태 확인(`get-context.js`)은 필요할 때 터미널에서 직접 실행할 수 있습니다.
 
 ### Q: 특정 단계만 실행할 수 있나요?
 

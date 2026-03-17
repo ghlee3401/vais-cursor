@@ -23,7 +23,6 @@ try {
   const config = pathsMod.loadConfig();
   const status = statusMod.getStatus();
   const activeFeature = statusMod.getActiveFeature();
-  const featureArg = process.argv[2] || '';
 
   const featureNames = Object.keys(status.features || {});
   const lines = [];

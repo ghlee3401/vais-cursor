@@ -75,12 +75,13 @@ function initFeature(featureName) {
  * 피처의 현재 페이즈 업데이트
  */
 function updatePhase(featureName, phase, phaseStatus) {
-  const status = getStatus();
+  let status = getStatus();
   if (!status.features[featureName]) {
     const initialized = initFeature(featureName);
     if (!initialized) return null;
-    // initFeature 성공 후 상태를 다시 읽어서 진행 (무한 재귀 방지)
-    return updatePhase(featureName, phase, phaseStatus);
+    // initFeature가 status.json을 갱신했으므로 다시 읽기
+    status = getStatus();
+    if (!status.features[featureName]) return null;
   }
 
   const feature = status.features[featureName];
@@ -95,8 +96,12 @@ function updatePhase(featureName, phase, phaseStatus) {
       const config = loadConfig();
       const phases = config.workflow?.phases || [];
       const idx = phases.indexOf(phase);
-      if (idx >= 0 && idx < phases.length - 1) {
-        feature.currentPhase = phases[idx + 1];
+      if (idx >= 0) {
+        // 다음 phase가 있으면 이동, 마지막 phase면 현재 유지
+        if (idx < phases.length - 1) {
+          feature.currentPhase = phases[idx + 1];
+        }
+        // else: 마지막 phase 완료 — currentPhase 유지 (최종 상태)
       }
     }
   }

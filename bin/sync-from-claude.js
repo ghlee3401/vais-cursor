@@ -46,8 +46,9 @@ function copyDir(src, dest) {
 function pullSubmodule() {
   console.log('submodule 최신화: git pull (main)...');
   try {
-    execSync('git -C vais-claude-code pull origin main', {
-      cwd: CURSOR_ROOT,
+    const submodulePath = path.join(CURSOR_ROOT, 'vais-claude-code');
+    execSync('git pull origin main', {
+      cwd: submodulePath,
       stdio: 'inherit',
     });
   } catch (e) {

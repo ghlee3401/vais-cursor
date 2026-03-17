@@ -26,7 +26,10 @@ const activeFeature = getActiveFeature();
 if (activeFeature) {
   for (const [phase, template] of Object.entries(docPaths)) {
     const expected = template.replace(/\{feature\}/g, activeFeature);
-    if (filePath.includes(expected)) {
+    // 정규화된 경로로 비교하여 부분 문자열 오탐지 방지
+    const normalizedFile = path.resolve(filePath);
+    const normalizedExpected = path.resolve(expected);
+    if (normalizedFile === normalizedExpected || normalizedFile.endsWith(path.sep + expected)) {
       // design-db는 design 단계의 일부이므로 design으로 매핑
       const actualPhase = phase === 'design-db' ? 'design' : phase;
       updatePhase(activeFeature, actualPhase, 'completed');
@@ -47,9 +50,8 @@ if (activeFeature) {
         debugLog('DocTracker', 'Memory write failed (non-critical)', { error: memErr.message });
       }
 
-      const phaseNames = config.workflow?.phaseNames || {};
-      const phaseName = phaseNames[phase] || phase;
-      outputAllow(`✅ "${activeFeature}" - ${phaseName} 문서 작성 완료. 워크플로우 상태가 업데이트되었습니다.`);
+      const displayName = (config.workflow?.phaseNames || {})[phase] || phase;
+      outputAllow(`✅ "${activeFeature}" - ${displayName} 문서 작성 완료. 워크플로우 상태가 업데이트되었습니다.`);
       process.exit(0);
     }
   }
