@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { STATE, ensureVaisDirs, loadConfig } = require('./paths');
+const { debugLog } = require('./debug');
 
 /**
  * 빈 상태 객체 생성
@@ -25,6 +26,7 @@ function getStatus() {
     const raw = fs.readFileSync(STATE.status(), 'utf8');
     return JSON.parse(raw);
   } catch (e) {
+    debugLog('Status', 'getStatus failed, using empty', { error: e.message });
     return createEmptyStatus();
   }
 }
@@ -79,9 +81,8 @@ function updatePhase(featureName, phase, phaseStatus) {
   if (!status.features[featureName]) {
     const initialized = initFeature(featureName);
     if (!initialized) return null;
-    // initFeature가 status.json을 갱신했으므로 다시 읽기
+    // initFeature가 저장한 상태를 다시 읽어서 진행 (재귀 대신 재로드)
     status = getStatus();
-    if (!status.features[featureName]) return null;
   }
 
   const feature = status.features[featureName];
@@ -96,12 +97,8 @@ function updatePhase(featureName, phase, phaseStatus) {
       const config = loadConfig();
       const phases = config.workflow?.phases || [];
       const idx = phases.indexOf(phase);
-      if (idx >= 0) {
-        // 다음 phase가 있으면 이동, 마지막 phase면 현재 유지
-        if (idx < phases.length - 1) {
-          feature.currentPhase = phases[idx + 1];
-        }
-        // else: 마지막 phase 완료 — currentPhase 유지 (최종 상태)
+      if (idx >= 0 && idx < phases.length - 1) {
+        feature.currentPhase = phases[idx + 1];
       }
     }
   }
@@ -280,6 +277,7 @@ function getFeatureRegistry(featureName) {
   try {
     return JSON.parse(fs.readFileSync(registryPath, 'utf8'));
   } catch (e) {
+    debugLog('Status', 'getFeatureRegistry failed', { feature: featureName, error: e.message });
     return null;
   }
 }

@@ -7,6 +7,7 @@ const ASSET_MAP = [
   { src: 'templates',    dest: '.vais/templates' },
   { src: 'scripts',      dest: '.vais/scripts' },
   { src: 'lib',          dest: '.vais/lib' },
+  { src: 'vendor',       dest: '.vais/vendor' },
 ];
 
 const ASSET_FILES = [

@@ -46,7 +46,7 @@ const currentPhaseName = phaseNames[currentPhase] || currentPhase;
 
 // 완료된 단계 수 계산
 const completedCount = phases.filter(
-  p => summary.phases?.[p]?.status === 'completed'
+  p => summary.phases[p]?.status === 'completed'
 ).length;
 const totalCount = phases.length;
 const progressBar = buildProgressBar(completedCount, totalCount);
@@ -76,7 +76,7 @@ if (gapLine) lines.push(`║ ${gapLine}`);
 
 if (nextPhase) {
   lines.push(`║ 💡 다음: \`/vais ${nextPhase} ${activeFeature}\` (${nextPhaseName})`);
-} else if (completedCount >= totalCount) {
+} else if (currentPhase === 'review') {
   lines.push(`║ 🎉 모든 단계 완료! \`/vais status\`로 최종 확인하세요.`);
 }
 

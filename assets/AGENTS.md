@@ -104,5 +104,8 @@ kebab-case 영문 소문자를 권장합니다. 아래는 서비스에서 자주
 | v0.8.7 | 2026-03-14 | 코드 품질: 중복 제거, 입력 검증, loadConfig 캐싱 |
 | v0.8.8 | 2026-03-14 | gates 불일치 수정, plugin.json hooks 경로 수정 |
 | v0.10.0 | 2026-03-15 | Manager 에이전트 추가, Memory 시스템 도입 |
-| v0.9.1 | 2026-03-15 | README 전면 개선, 날짜 통일, 버전·수정일 표시 추가 |
-| v0.9.0 | 2026-03-14 | wireframe 스킬 통합, fix 체이닝 방식 전환, check Gap 방향 판단 |
+| v0.11.0 | 2026-03-16 | 코드 리뷰 반영: bash-guard 강화, doc-tracker 경로 매칭 수정, 에러 로깅 추가, no-op 훅 제거, 템플릿 보완 |
+| v0.11.1 | 2026-03-17 | .claude/settings.json 훅 등록 추가 — 플러그인 미설치 환경에서도 훅 동작 |
+| v0.11.2 | 2026-03-17 | 폴더 구조 통일: init 템플릿 참조 추가, $1→{feature} 플레이스홀더 통일, feature registry 생성 |
+| v0.12.0 | 2026-03-17 | UI/UX Pro Max 번들 — 디자인 토큰 자동 생성, designer 에이전트 역할 분리 |
+| v0.13.0 | 2026-03-19 | /vais fix를 Manager Command 모드로 통합, fix.md phase 제거 |

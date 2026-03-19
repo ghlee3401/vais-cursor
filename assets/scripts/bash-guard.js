@@ -15,18 +15,18 @@ if (!command) {
 }
 
 const BLOCKED = [
-  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)\/(\s|$)/, reason: '루트 디렉토리 삭제 시도' },
-  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)~/, reason: '홈 디렉토리 삭제 시도' },
-  { pattern: /rm\s+(-[a-zA-Z]*r[a-zA-Z]*\s+(-[a-zA-Z]*f[a-zA-Z]*\s+)?|(-[a-zA-Z]*f[a-zA-Z]*\s+)?-[a-zA-Z]*r[a-zA-Z]*\s+)\.(\s|\/?\s|$)/, reason: '현재 디렉토리 전체 삭제 시도' },
-  { pattern: /rm\s+-rf\s/i, reason: '재귀 강제 삭제 시도' },
+  // rm -rf 변형: 분리된 플래그(-r -f), sudo, 환경변수($HOME 등), 경로 조작(/../) 포함
+  { pattern: /(?:sudo\s+)?rm\s+(?:-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|-r\s+-f|-f\s+-r|--recursive\s+--force|--force\s+--recursive)\s+[\/~.]/, reason: '위험한 재귀 강제 삭제 시도' },
+  { pattern: /(?:sudo\s+)?rm\s+(?:-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|-r\s+-f|-f\s+-r|--recursive\s+--force|--force\s+--recursive)\s+\$/, reason: '환경변수 경로 재귀 삭제 시도' },
   { pattern: /drop\s+database/i, reason: 'DB 전체 삭제 시도' },
   { pattern: /drop\s+table/i, reason: 'DB 테이블 삭제 시도' },
   { pattern: /truncate\s+table/i, reason: 'DB 테이블 초기화 시도' },
   { pattern: /git\s+push\s+.*--force/, reason: '강제 푸시는 팀 작업에 위험합니다' },
-  { pattern: /git\s+push\s+.*-f(\s|$)/, reason: '강제 푸시는 팀 작업에 위험합니다' },
-  { pattern: /mkfs\b/, reason: '파일시스템 포맷 시도' },
-  { pattern: /:\(\)\{.*\|.*&\s*\}/, reason: 'Fork bomb 감지' },
-  { pattern: /dd\s+.*of=\/dev\//, reason: '디스크 직접 쓰기 시도' },
+  { pattern: /(?:sudo\s+)?mkfs/, reason: '파일시스템 포맷 시도' },
+  { pattern: /:\(\)\{.*\|.*&\}/, reason: 'Fork bomb 감지' },
+  { pattern: />\s*\/dev\/sd[a-z]/, reason: '디스크 직접 쓰기 시도' },
+  { pattern: /(?:sudo\s+)?dd\s+.*of=\/dev\//, reason: 'dd로 디스크 직접 쓰기 시도' },
+  { pattern: /chmod\s+(-R\s+)?777\s+\//, reason: '루트 권한 변경 시도' },
 ];
 
 const ASK = [
@@ -36,17 +36,15 @@ const ASK = [
 ];
 
 for (const { pattern, reason } of BLOCKED) {
-  if (typeof command === 'string' && pattern.test(command)) {
-    debugLog('BashGuard', 'BLOCKED', { reason });
-    // 로그에 명령어 전체를 노출하지 않고 축약
-    const displayCmd = command.length > 80 ? command.substring(0, 80) + '...' : command;
-    outputBlock(`⛔ 차단됨: ${reason}\n명령: ${displayCmd}`);
+  if (pattern.test(command)) {
+    debugLog('BashGuard', 'BLOCKED', { command, reason });
+    outputBlock(`⛔ 차단됨: ${reason}\n명령: ${command}`);
     process.exit(0);
   }
 }
 
 for (const { pattern, reason } of ASK) {
-  if (typeof command === 'string' && pattern.test(command)) {
+  if (pattern.test(command)) {
     debugLog('BashGuard', 'WARNING', { command, reason });
     outputAllow(`⚠️ 주의: ${reason}\n실행하려는 명령: \`${command}\`\n사용자에게 확인을 받으세요.`);
     process.exit(0);

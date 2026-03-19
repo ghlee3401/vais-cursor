@@ -11,7 +11,7 @@ VAIS 9단계 개발 워크플로우의 Cursor 버전입니다.
 ## 워크플로우
 
 ```
-조사·탐색 → 기획 → IA → 와이어프레임 → 설계(UI+DB) → 프론트엔드 → 백엔드 → Gap분석 → 검토
+조사/탐색 -> 기획 -> IA -> 와이어프레임 -> 설계(UI+DB) -> 프론트엔드 -> 백엔드 -> Gap분석 -> 검토
 ```
 
 ## 공통 지침
@@ -19,19 +19,20 @@ VAIS 9단계 개발 워크플로우의 Cursor 버전입니다.
 - **AGENTS.md** 참조: `.vais/AGENTS.md` (프로젝트 설치 시 포함됨)
 - 문서 경로: `docs/01-research` ~ `docs/07-review`
 - 피처명: kebab-case 영문 (login, payment, chat)
-- 피처 레지스트리: `.vais/features/{피처}.json`
+- 피처 레지스트리: `.vais/features/{feature}.json`
 - 상태 파일: `.vais/status.json`
 - 메모리: `.vais/memory.json`
 - 설정: `vais.config.json`
+- 디자인 시스템: `design-system/{feature}/MASTER.md`
 
 ## 체이닝 문법
 
 | 방식 | 문법 | 예시 |
 |------|------|------|
-| 단일 | `vais {단계} {기능}` | `vais plan 로그인기능` |
-| 순차 (`:`) | `vais {단계}:{단계} {기능}` | `vais plan:ia:wireframe 로그인기능` |
-| 병렬 (`+`) | `vais {단계}+{단계} {기능}` | `vais fe+be 로그인기능` |
-| 전체 | `vais auto {기능}` | `vais auto 로그인기능` |
+| 단일 | `vais {단계} {기능}` | `vais plan login` |
+| 순차 (`:`) | `vais {단계}:{단계} {기능}` | `vais plan:ia:wireframe login` |
+| 병렬 (`+`) | `vais {단계}+{단계} {기능}` | `vais fe+be login` |
+| 전체 | `vais auto {기능}` | `vais auto login` |
 
 ## 병렬 시 mcp_task 매핑
 
@@ -40,10 +41,10 @@ VAIS 9단계 개발 워크플로우의 Cursor 버전입니다.
 | `design` | designer | backend-dev |
 | `fe+be` | frontend-dev | backend-dev |
 
-- 병렬 실행 시: `mcp_task`를 두 번 동시 호출. `prompt`에 피처명·참조 문서 경로를 명시.
+- 병렬 실행 시: `mcp_task`를 두 번 동시 호출. `prompt`에 피처명, 참조 문서 경로를 명시.
 - **auto** 흐름: 순차 진행 + design / fe+be 구간에서만 mcp_task 병렬.
 
-## 상태·컨텍스트
+## 상태/컨텍스트
 
 - 작업 전: `node .vais/scripts/get-context.js [피처명]`으로 진행 상태 확인
 - Bash 실행 전: `node .vais/scripts/bash-guard.js`로 위험 명령 차단
@@ -58,4 +59,4 @@ VAIS 9단계 개발 워크플로우의 Cursor 버전입니다.
 | frontend-dev | `frontend-dev` | fe |
 | backend-dev | `backend-dev` | design (DB), be |
 | reviewer | `reviewer` | check, review |
-| manager | `manager` | auto, fix, 히스토리 관리 |
+| manager | `manager` | auto, 히스토리 관리, 수정 지시 (fix 통합) |

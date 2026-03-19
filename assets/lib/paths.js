@@ -4,6 +4,7 @@
  */
 const path = require('path');
 const fs = require('fs');
+const { debugLog } = require('./debug');
 
 // 플러그인 루트: 이 파일 기준 한 단계 위
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
@@ -64,20 +65,17 @@ function findDoc(phase, feature) {
 }
 
 /**
- * 설정 파일 로드 (프로세스 내 캐싱 — mtime 기반 무효화)
+ * 설정 파일 로드 (프로세스 내 캐싱)
  */
 let _configCache = null;
-let _configMtime = 0;
 function loadConfig() {
+  if (_configCache) return _configCache;
   try {
     const configPath = CONFIG.vaisConfig();
-    const stat = fs.statSync(configPath);
-    const mtime = stat.mtimeMs;
-    if (_configCache && mtime === _configMtime) return _configCache;
     _configCache = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    _configMtime = mtime;
     return _configCache;
   } catch (e) {
+    debugLog('Paths', 'loadConfig failed', { error: e.message });
     return { version: '0.1.0', workflow: { phases: [] } };
   }
 }
@@ -97,6 +95,7 @@ function loadProjectConfig() {
     const raw = fs.readFileSync(getProjectConfigPath(), 'utf8');
     return JSON.parse(raw);
   } catch (e) {
+    debugLog('Paths', 'loadProjectConfig failed', { error: e.message });
     return {};
   }
 }
@@ -118,7 +117,9 @@ function loadOutputStyle() {
     if (fs.existsSync(stylePath)) {
       return fs.readFileSync(stylePath, 'utf8');
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    debugLog('Paths', 'loadOutputStyle failed', { error: e.message });
+  }
   return '';
 }
 

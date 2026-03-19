@@ -25,12 +25,12 @@ const INTENT_PATTERNS = [
   { keywords: ['기획', '계획', 'plan', '요구사항', 'prd', '기능 정의'], phase: 'plan' },
   { keywords: ['ia', 'information architecture', '정보 구조', '사이트맵', 'sitemap', '네비게이션'], phase: 'ia' },
   { keywords: ['와이어프레임', 'wireframe', '목업', 'mockup', '화면 구성', '레이아웃'], phase: 'wireframe' },
-  { keywords: ['ui', 'ux', '디자인', 'design', '인터랙션', '스타일 가이드', 'db', '데이터베이스', 'database', '스키마', 'schema', 'erd'], phase: 'design' },
+  { keywords: ['ui 설계', 'ux 설계', 'ui설계', 'ux설계', '디자인 토큰', 'design token', '인터랙션 설계', '스타일 가이드', 'db 설계', 'db설계', '데이터베이스 설계', 'database design', '스키마 설계', 'schema design', 'erd 설계'], phase: 'design' },
   { keywords: ['프론트', 'frontend', 'fe', 'react', 'next', 'vue', '컴포넌트', '화면 개발'], phase: 'fe' },
   { keywords: ['백엔드', 'backend', 'be', 'api', '서버', 'express', 'nest', 'fastapi'], phase: 'be' },
-  { keywords: ['gap', 'check', '빌드', '검증', '분석'], phase: 'check' },
+  { keywords: ['gap 분석', 'gap분석', '/vais check', 'vais check', '빌드 검증', '빌드검증'], phase: 'check' },
   { keywords: ['리뷰', 'review', '검토', '코드 리뷰', '품질', '보안 점검'], phase: 'review' },
-  { keywords: ['/vais fix', 'vais fix'], phase: 'fix' },
+  { keywords: ['/vais fix', 'vais fix'], phase: 'manager' },
 ];
 
 const activeFeature = getActiveFeature();
@@ -55,7 +55,7 @@ for (const [key, name] of Object.entries(phaseNames)) {
   nameToKey[key] = key;
 }
 
-// 체이닝 패턴 감지: "plan:convention:ia", "fe+be", 혼합
+// 체이닝 패턴 감지: "plan:ia:wireframe", "fe+be", 혼합
 const chainingPattern = /^\/vais\s+([\w+:]+)\s+(.+)$/i;
 const chainingMatch = userPrompt.match(chainingPattern);
 
@@ -66,7 +66,7 @@ if (chainingMatch) {
     const segments = chainExpr.split(':');
     const allValid = segments.every(seg => {
       const parts = seg.split('+');
-      return parts.every(p => phases.includes(p) || nameToKey[p]);
+      return parts.every(p => phases.includes(p) || Object.values(nameToKey).includes(p));
     });
 
     if (allValid) {
@@ -108,17 +108,18 @@ if (rangeMatch) {
       const implGroup = parallelGroups.implementation || [];
       const chainParts = [];
       let i = 0;
-      const addedParallelGroups = new Set();
       while (i < rangePhases.length) {
         const p = rangePhases[i];
-        if (implGroup.includes(p) && !addedParallelGroups.has('impl')) {
+        if (implGroup.includes(p)) {
           const siblings = rangePhases.filter(rp => implGroup.includes(rp));
           if (siblings.length > 1) {
             chainParts.push(siblings.join('+'));
-            addedParallelGroups.add('impl');
-            // 병렬 그룹의 모든 항목을 건너뛰기
-            while (i < rangePhases.length && implGroup.includes(rangePhases[i])) {
-              i++;
+            // skip all siblings — findIndex returns -1 when no non-impl phase remains
+            const nextNonImpl = rangePhases.slice(i).findIndex(rp => !implGroup.includes(rp));
+            if (nextNonImpl === -1) {
+              i = rangePhases.length;
+            } else {
+              i += nextNonImpl;
             }
             continue;
           }
