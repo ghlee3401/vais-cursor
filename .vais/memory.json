@@ -1,0 +1,31 @@
+{
+  "entries": [
+    {
+      "id": 1,
+      "type": "milestone",
+      "date": "2026-03-19",
+      "summary": "v0.4.0 릴리즈 -- vais-claude-code 0.13.0 동기화 반영",
+      "details": "vais-claude-code 0.13.0의 주요 변경사항(Manager 에이전트, Memory 시스템, fix 체이닝, 피처 레지스트리, 9단계 워크플로우, Skills 2.0)을 Cursor Extension에 동기화. README v0.3.0 -> v0.4.0 업데이트, CHANGELOG.md 신규 생성, git tag v0.4.0 생성.",
+      "relatedFeatures": [],
+      "files": ["package.json", "README.md", "CHANGELOG.md"]
+    },
+    {
+      "id": 2,
+      "type": "decision",
+      "date": "2026-03-19",
+      "summary": "CHANGELOG.md를 vais-cursor 본 프로젝트에 신규 생성",
+      "details": "기존에는 vais-claude-code 서브모듈에만 CHANGELOG.md가 존재했음. vais-cursor 자체 릴리즈 이력 추적을 위해 본 프로젝트에도 CHANGELOG.md를 생성. 0.1.0부터 0.4.0까지의 이력을 git log 기반으로 역추적하여 기록.",
+      "relatedFeatures": [],
+      "files": ["CHANGELOG.md"]
+    },
+    {
+      "id": 3,
+      "type": "change",
+      "date": "2026-03-19",
+      "summary": "README.md 버전 참조 0.3.0 -> 0.4.0 업데이트 (3곳)",
+      "details": "버전 표시, .vsix 설치 명령어, VSIX 파일명 참조를 0.4.0으로 일괄 변경. 최종 수정일 2026-03-19로 갱신.",
+      "relatedFeatures": [],
+      "files": ["README.md"]
+    }
+  ]
+}

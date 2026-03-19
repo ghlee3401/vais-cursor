@@ -2,7 +2,7 @@
 
 > 기획부터 배포까지, 팀 개발을 빠르고 튼튼하게. — Cursor Extension
 
-**v0.3.0** · 최종 수정 2026-03-16
+**v0.4.0** · 최종 수정 2026-03-19
 
 VAIS 9단계 개발 워크플로우의 **Cursor Extension** 버전입니다.
 메인 소스는 [vais-claude-code](https://github.com/ghlee3401/vais-claude-code)이며, git submodule + 동기화 스크립트로 갱신됩니다.
@@ -43,14 +43,14 @@ npm install
 npm run package
 
 # 3. Cursor에 설치
-cursor --install-extension vais-cursor-0.3.0.vsix
+cursor --install-extension vais-cursor-0.4.0.vsix
 ```
 
 ### 방법 2: Cursor UI에서 설치
 
 1. `.vsix` 파일을 빌드 (위 1~2단계)
 2. Cursor에서 `Ctrl+Shift+P` → `Extensions: Install from VSIX...`
-3. `vais-cursor-0.3.0.vsix` 선택
+3. `vais-cursor-0.4.0.vsix` 선택
 
 ### 설치 후
 
